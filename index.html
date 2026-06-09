@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CR Grupo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: sans-serif; background: #f5f5f5; color: #222; }
+
+  header {
+    background: #1a3a6b;
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 18px; }
+
+  nav {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid #ddd;
+  }
+  nav button {
+    flex: 1; padding: 12px; border: none; background: none;
+    font-size: 14px; cursor: pointer;
+    border-bottom: 3px solid transparent; color: #666;
+  }
+  nav button.active { border-bottom-color: #1a3a6b; color: #1a3a6b; font-weight: 600; }
+
+  .page { display: none; padding: 20px; max-width: 600px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card {
+    background: white; border-radius: 10px; padding: 16px;
+    margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .rank-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: white; border-radius: 10px;
+    margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .rank-num { font-size: 22px; min-width: 32px; text-align: center; }
+  .rank-stats { display: flex; gap: 14px; text-align: center; }
+  .rank-stats div { font-size: 12px; color: #888; }
+  .rank-stats strong { display: block; font-size: 17px; color: #222; }
+  .wr { font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .wr-g { background: #e8f5e9; color: #2e7d32; }
+  .wr-m { background: #fff8e1; color: #f57f17; }
+  .wr-b { background: #fce4ec; color: #c62828; }
+
+  .battle-row {
+    background: white; border-radius: 8px; padding: 10px 14px;
+    margin-bottom: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    display: flex; align-items: center; gap: 10px; font-size: 14px;
+  }
+  .b-win { color: #2e7d32; font-weight: 700; font-size: 12px; }
+  .b-loss { color: #c62828; font-weight: 700; font-size: 12px; }
+  .b-time { font-size: 11px; color: #aaa; white-space: nowrap; }
+
+  label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; margin-top: 12px; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd;
+    border-radius: 8px; font-size: 14px;
+  }
+  input:focus { outline: none; border-color: #1a3a6b; }
+
+  .player-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .player-row input { flex: 1; margin: 0; }
+  .btn-remove {
+    background: none; border: 1px solid #ddd; border-radius: 6px;
+    padding: 8px 12px; cursor: pointer; color: #c62828; font-size: 14px;
+  }
+
+  .btn {
+    padding: 10px 18px; border-radius: 8px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    margin-top: 10px; margin-right: 8px;
+  }
+  .btn-blue  { background: #1a3a6b; color: white; }
+  .btn-gray  { background: #eee; color: #333; }
+  .btn-red   { background: #fce4ec; color: #c62828; }
+  .btn-green { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .btn-sm    { padding: 6px 14px; font-size: 12px; margin: 0; }
+
+  .status-box {
+    padding: 12px 16px; border-radius: 8px; font-size: 13px;
+    margin-top: 10px; display: flex; align-items: flex-start; gap: 10px; line-height: 1.5;
+  }
+  .s-ok   { background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; }
+  .s-err  { background: #fce4ec; border: 1px solid #ef9a9a; color: #b71c1c; }
+  .s-info { background: #e3f2fd; border: 1px solid #90caf9; color: #0d47a1; }
+
+  .api-indicator {
+    padding: 10px 14px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; margin-bottom: 10px;
+  }
+  .api-ok   { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+  .api-err  { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+  .api-none { background: #f5f5f5; color: #888;    border: 1px solid #ddd; }
+
+  .section-label {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #888; margin: 20px 0 10px;
+  }
+  .divider { height: 1px; background: #eee; margin: 20px 0; }
+
+  .h2h-bar { height: 10px; border-radius: 10px; overflow: hidden; display: flex; margin: 10px 0; }
+  select {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd;
+    border-radius: 8px; font-size: 14px; background: white; margin-bottom: 8px;
+  }
+
+  .empty { text-align: center; padding: 40px 20px; color: #aaa; }
+  .empty p { margin-top: 8px; font-size: 14px; }
+
+  .sync-row {
+    background: white; border-radius: 10px; padding: 14px 16px;
+    margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    display: flex; align-items: center; gap: 10px; font-size: 14px;
+  }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚔️ CR Grupo</h1>
+  <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;font-weight:600" onclick="syncAll()">🔄 Sincronizar</button>
+</header>
+
+<nav>
+  <button class="active" onclick="go('ranking',this)">🏆 Ranking</button>
+  <button onclick="go('batallas',this)">⚔️ Batallas</button>
+  <button onclick="go('h2h',this)">👥 H2H</button>
+  <button onclick="go('config',this)">⚙️ Config</button>
+</nav>
+
+<!-- RANKING -->
+<div class="page active" id="page-ranking">
+  <div id="sync-bar"></div>
+  <div class="section-label">Clasificación del grupo</div>
+  <div id="ranking-list"></div>
+</div>
+
+<!-- BATALLAS -->
+<div class="page" id="page-batallas">
+  <div class="section-label">Historial de batallas</div>
+  <div id="filter-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+  <div id="battles-list"></div>
+</div>
+
+<!-- H2H -->
+<div class="page" id="page-h2h">
+  <div class="section-label">Cara a cara</div>
+  <select id="h2h1" onchange="renderH2H()"><option value="">Jugador 1</option></select>
+  <select id="h2h2" onchange="renderH2H()"><option value="">Jugador 2</option></select>
+  <div id="h2h-out"></div>
+</div>
+
+<!-- CONFIG -->
+<div class="page" id="page-config">
+  <div class="section-label">API Key de Clash Royale</div>
+  <div id="api-indicator" class="api-indicator api-none">⬜ API no verificada</div>
+  <input type="password" id="api-key" placeholder="eyJ0eXAiOiJKV1Qi…" oninput="resetApiStatus()" />
+  <div style="font-size:11px;color:#aaa;margin-top:6px;margin-bottom:10px;">
+    Consíguela en <a href="https://developer.clashroyale.com" target="_blank">developer.clashroyale.com</a>. Se guarda en tu navegador.
+  </div>
+  <button class="btn btn-green btn-sm" onclick="testApi()">🔌 Probar conexión</button>
+  <div id="api-test-out"></div>
+
+  <div class="divider"></div>
+  <div class="section-label">Jugadores del grupo</div>
+  <div style="font-size:12px;color:#888;margin-bottom:10px;">Tag sin # — el nombre se jala solo al sincronizar.</div>
+  <div id="players-list"></div>
+  <button class="btn btn-gray btn-sm" onclick="addSlot()" style="margin-top:4px">+ Agregar jugador</button>
+
+  <div class="divider"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn btn-blue btn-sm" onclick="saveConfig()">💾 Guardar</button>
+    <button class="btn btn-blue btn-sm" onclick="saveConfig(true)">💾 Guardar y sincronizar</button>
+    <button class="btn btn-red btn-sm" onclick="clearData()">🗑 Borrar todo</button>
+  </div>
+  <div id="config-msg" style="font-size:13px;margin-top:10px;"></div>
+</div>
+
+<script>
+const COLORS = ['#1a6dcc','#e84040','#8b2fc9','#e6a800','#2e7d32','#e65100','#00838f'];
+let S = { key:'', players:[], battles:[], lastSync:null };
+
+function save() { try { localStorage.setItem('cr_v5', JSON.stringify(S)); } catch(e){} }
+function load() { try { const d=localStorage.getItem('cr_v5'); if(d) S=Object.assign(S,JSON.parse(d)); } catch(e){} }
+
+// El backend proxy que subimos a Vercel
+async function crFetch(path) {
+  const res = await fetch(`/api/battles?path=${encodeURIComponent(path)}`, {
+    headers: { 'x-api-key': S.key }
+  });
+  return { ok: res.ok, status: res.status, data: await res.json() };
+}
+
+// ── Nav ──────────────────────────────────────────────────────────────
+function go(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='ranking') renderRanking();
+  if(id==='batallas') renderBatallas();
+  if(id==='h2h') renderH2HSelects();
+  if(id==='config') renderConfig();
+}
+
+// ── API Test ─────────────────────────────────────────────────────────
+function resetApiStatus() {
+  document.getElementById('api-indicator').className='api-indicator api-none';
+  document.getElementById('api-indicator').textContent='⬜ API no verificada';
+  document.getElementById('api-test-out').innerHTML='';
+}
+
+async function testApi() {
+  const key = document.getElementById('api-key').value.trim();
+  const out = document.getElementById('api-test-out');
+  const ind = document.getElementById('api-indicator');
+  if(!key) { out.innerHTML='<div class="status-box s-err">⚠️ Pega tu API key primero.</div>'; return; }
+  S.key = key;
+  out.innerHTML='<div class="status-box s-info"><span class="spin">🔄</span> Probando…</div>';
+  try {
+    const r = await crFetch('players/%23Y99YYUC');
+    if(r.status===200) {
+      ind.className='api-indicator api-ok';
+      ind.textContent='✅ API conectada y funcionando';
+      out.innerHTML='<div class="status-box s-ok">✅ <strong>¡Conexión exitosa!</strong> La API responde correctamente. Ya puedes guardar y sincronizar.</div>';
+      save();
+    } else if(r.status===403) {
+      ind.className='api-indicator api-err';
+      ind.textContent='❌ Acceso denegado (IP incorrecta)';
+      out.innerHTML='<div class="status-box s-err">❌ <strong>Error 403.</strong> Tu IP no coincide con la que usaste al crear la key. Entra a developer.clashroyale.com, borra la key y crea una nueva desde esta red.</div>';
+    } else if(r.status===401) {
+      ind.className='api-indicator api-err';
+      ind.textContent='❌ API key inválida';
+      out.innerHTML='<div class="status-box s-err">❌ <strong>Error 401.</strong> La key está mal copiada. Debe empezar con <code>eyJ</code> y ser el token completo.</div>';
+    } else {
+      ind.className='api-indicator api-err';
+      ind.textContent=`❌ Error ${r.status}`;
+      out.innerHTML=`<div class="status-box s-err">❌ Error ${r.status}. Intenta de nuevo.</div>`;
+    }
+  } catch(e) {
+    ind.className='api-indicator api-err';
+    ind.textContent='❌ Sin conexión';
+    out.innerHTML='<div class="status-box s-err">❌ No se pudo conectar. Revisa tu internet.</div>';
+  }
+}
+
+// ── Config ───────────────────────────────────────────────────────────
+function renderConfig() {
+  document.getElementById('api-key').value = S.key || '';
+  const ind = document.getElementById('api-indicator');
+  if(S.key) { ind.className='api-indicator api-ok'; ind.textContent='✅ API key guardada — presiona "Probar conexión" para verificar'; }
+  if(!S.players.length) S.players=[{tag:'',name:''}];
+  document.getElementById('players-list').innerHTML = S.players.map((p,i)=>`
+    <div class="player-row">
+      <input type="text" placeholder="Tag (ej: 2PP9UURJY)" value="${p.tag}"
+        oninput="S.players[${i}].tag=this.value.toUpperCase().replace('#','')" />
+      <input type="text" placeholder="Nombre (auto)" value="${p.name||''}"
+        oninput="S.players[${i}].name=this.value" style="max-width:130px"/>
+      <button class="btn-remove" onclick="S.players.splice(${i},1);renderConfig()">✕</button>
+    </div>`).join('');
+}
+
+function addSlot() {
+  if(S.players.length>=10) return;
+  S.players.push({tag:'',name:''});
+  renderConfig();
+}
+
+function saveConfig(andSync=false) {
+  const k=document.getElementById('api-key').value.trim();
+  if(k) S.key=k;
+  S.players=S.players.filter(p=>p.tag.trim());
+  S.players.forEach((p,i)=>{ p.tag=p.tag.toUpperCase().replace('#',''); p.ci=i%7; });
+  save();
+  const msg=document.getElementById('config-msg');
+  msg.innerHTML='<span style="color:green">✓ Guardado</span>';
+  setTimeout(()=>msg.innerHTML='',2500);
+  if(andSync) syncAll();
+}
+
+// ── Sync ─────────────────────────────────────────────────────────────
+function setSyncBar(html) { const el=document.getElementById('sync-bar'); if(el) el.innerHTML=html; }
+
+async function syncAll() {
+  if(!S.key) { alert('Primero agrega y verifica tu API key en ⚙️ Config'); return; }
+  const tags=S.players.map(p=>p.tag).filter(Boolean);
+  if(!tags.length) { alert('Agrega jugadores en ⚙️ Config'); return; }
+
+  setSyncBar(`<div class="sync-row"><span class="spin">🔄</span> Sincronizando ${tags.length} jugadores…</div>`);
+
+  for(const p of S.players) {
+    if(!p.tag) continue;
+    try {
+      const r=await crFetch(`players/%23${p.tag}`);
+      if(r.ok && !p.name) p.name=r.data.name;
+    } catch(e){}
+  }
+
+  const tagSet=new Set(tags);
+  const existing=new Set(S.battles.map(b=>b.id));
+  let added=0, errors=0;
+
+  for(const p of S.players) {
+    if(!p.tag) continue;
+    try {
+      const r=await crFetch(`players/%23${p.tag}/battlelog`);
+      if(!r.ok) { errors++; continue; }
+      for(const b of r.data) {
+        if(!b.team?.[0]||!b.opponent?.[0]) continue;
+        const t1=b.team[0].tag?.replace('#','');
+        const t2=b.opponent[0].tag?.replace('#','');
+        if(!tagSet.has(t1)||!tagSet.has(t2)) continue;
+        const id=[t1,t2].sort().join('_')+'_'+b.battleTime;
+        if(existing.has(id)) continue;
+        const c1=b.team[0].crowns??0, c2=b.opponent[0].crowns??0;
+        S.battles.push({id,t1,t2,c1,c2,winner:c1>c2?t1:c2>c1?t2:null,time:b.battleTime});
+        existing.add(id); added++;
+      }
+    } catch(e){ errors++; }
+  }
+
+  S.battles.sort((a,b)=>b.time>a.time?1:-1);
+  S.lastSync=new Date().toISOString();
+  save();
+
+  if(errors&&!added) {
+    setSyncBar(`<div class="sync-row">❌ No se pudo conectar. Ve a ⚙️ Config → "Probar conexión".</div>`);
+  } else {
+    setSyncBar(`<div class="sync-row">✅ Listo — ${added} nuevas · ${S.battles.length} total · ${new Date().toLocaleTimeString('es-MX')}</div>`);
+  }
+  renderRanking();
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────
+function computeStats() {
+  const s={};
+  for(const p of S.players) s[p.tag]={w:0,l:0,d:0,n:0};
+  for(const b of S.battles) {
+    for(const t of [b.t1,b.t2]) {
+      if(!s[t]) continue; s[t].n++;
+      if(b.winner===t) s[t].w++;
+      else if(b.winner) s[t].l++;
+      else s[t].d++;
+    }
+  }
+  return s;
+}
+
+// ── Ranking ───────────────────────────────────────────────────────────
+function renderRanking() {
+  const list=document.getElementById('ranking-list');
+  const players=S.players.filter(p=>p.tag);
+  if(!players.length) { list.innerHTML=`<div class="empty">😶 Sin jugadores<p>Ve a ⚙️ Config y agrega tu grupo</p></div>`; return; }
+  const st=computeStats();
+  const sorted=[...players].sort((a,b)=>{
+    const sa=st[a.tag]||{w:0,n:0}, sb=st[b.tag]||{w:0,n:0};
+    return (sb.n?sb.w/sb.n:0)-(sa.n?sa.w/sa.n:0)||sb.w-sa.w;
+  });
+  const medals=['🥇','🥈','🥉'];
+  list.innerHTML=sorted.map((p,i)=>{
+    const s=st[p.tag]||{w:0,l:0,n:0};
+    const wr=s.n?Math.round(s.w/s.n*100):0;
+    return `<div class="rank-row">
+      <span class="rank-num">${i<3?medals[i]:'#'+(i+1)}</span>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:15px;color:${COLORS[p.ci??i%7]}">${p.name||p.tag}</div>
+        <div style="font-size:12px;color:#888">#${p.tag} · ${s.n} batallas</div>
+      </div>
+      <div class="rank-stats">
+        <div><strong style="color:#2e7d32">${s.w}</strong>Vic</div>
+        <div><strong style="color:#c62828">${s.l}</strong>Der</div>
+      </div>
+      <span class="wr ${wr>=60?'wr-g':wr>=40?'wr-m':'wr-b'}">${wr}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Batallas ──────────────────────────────────────────────────────────
+let battleFilter=null;
+function renderBatallas() {
+  const fb=document.getElementById('filter-btns'), bl=document.getElementById('battles-list');
+  const players=S.players.filter(p=>p.tag);
+  if(!S.battles.length) { fb.innerHTML=''; bl.innerHTML=`<div class="empty">⚔️<p>Sin batallas. Sincroniza primero.</p></div>`; return; }
+  const getName=t=>S.players.find(p=>p.tag===t)?.name||t;
+  fb.innerHTML=`<button class="btn btn-${!battleFilter?'blue':'gray'} btn-sm" onclick="battleFilter=null;renderBatallas()">Todos</button>`+
+    players.map(p=>`<button class="btn btn-${battleFilter===p.tag?'blue':'gray'} btn-sm" onclick="battleFilter='${p.tag}';renderBatallas()">${p.name||p.tag}</button>`).join('');
+  const shown=battleFilter?S.battles.filter(b=>b.t1===battleFilter||b.t2===battleFilter):S.battles;
+  bl.innerHTML=shown.slice(0,80).map(b=>`
+    <div class="battle-row">
+      <div style="flex:1;font-size:14px"><b>${getName(b.t1)}</b> vs <b>${getName(b.t2)}</b></div>
+      <div class="${b.winner?'b-win':'b-loss'}">${b.winner?'✓ '+getName(b.winner):'— Empate'}</div>
+      <div style="font-size:12px;color:#555">${b.c1}👑${b.c2}</div>
+      <div class="b-time">${fmtTime(b.time)}</div>
+    </div>`).join('');
+}
+
+// ── H2H ──────────────────────────────────────────────────────────────
+function renderH2HSelects() {
+  const opts=S.players.filter(p=>p.tag).map(p=>`<option value="${p.tag}">${p.name||p.tag}</option>`).join('');
+  document.getElementById('h2h1').innerHTML='<option value="">Jugador 1</option>'+opts;
+  document.getElementById('h2h2').innerHTML='<option value="">Jugador 2</option>'+opts;
+  document.getElementById('h2h-out').innerHTML='';
+}
+
+function renderH2H() {
+  const t1=document.getElementById('h2h1').value, t2=document.getElementById('h2h2').value;
+  const out=document.getElementById('h2h-out');
+  if(!t1||!t2||t1===t2) { out.innerHTML=''; return; }
+  const matches=S.battles.filter(b=>(b.t1===t1&&b.t2===t2)||(b.t1===t2&&b.t2===t1));
+  if(!matches.length) { out.innerHTML=`<div class="empty">Sin batallas entre estos dos</div>`; return; }
+  const getName=t=>S.players.find(p=>p.tag===t)?.name||t;
+  const n1=getName(t1), n2=getName(t2);
+  const w1=matches.filter(b=>b.winner===t1).length, w2=matches.filter(b=>b.winner===t2).length;
+  const total=matches.length;
+  const c1=COLORS[S.players.find(p=>p.tag===t1)?.ci??0], c2=COLORS[S.players.find(p=>p.tag===t2)?.ci??1];
+  const pct1=Math.round(w1/total*100), pct2=Math.round(w2/total*100);
+  out.innerHTML=`
+    <div class="card" style="margin-top:12px;text-align:center">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:700;color:${c1};font-size:16px">${n1}</span>
+        <span style="font-size:12px;color:#888">${total} batallas</span>
+        <span style="font-weight:700;color:${c2};font-size:16px">${n2}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:32px;font-weight:700;margin:8px 0">
+        <span style="color:${c1}">${w1}</span>
+        <span style="font-size:14px;color:#aaa;align-self:center">VS</span>
+        <span style="color:${c2}">${w2}</span>
+      </div>
+      <div class="h2h-bar">
+        <div style="width:${pct1}%;background:${c1}"></div>
+        <div style="width:${pct2}%;background:${c2}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#888">
+        <span>${pct1}%</span><span>${pct2}%</span>
+      </div>
+    </div>
+    <div class="section-label">Últimas batallas</div>
+    ${matches.slice(0,10).map(b=>{
+      const who1c=b.t1===t1?b.c1:b.c2, who2c=b.t1===t1?b.c2:b.c1;
+      return `<div class="battle-row">
+        <div style="flex:1">${n1} <b>${who1c}👑${who2c}</b> ${n2}</div>
+        <div class="${b.winner?'b-win':'b-loss'}">${b.winner?(b.winner===t1?'✓ '+n1:'✓ '+n2):'Empate'}</div>
+        <div class="b-time">${fmtTime(b.time)}</div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────
+function fmtTime(t) {
+  if(!t) return '';
+  try {
+    const s=t.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/,'$1-$2-$3T$4:$5:$6Z');
+    return new Date(s).toLocaleDateString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  } catch(e){ return ''; }
+}
+
+function clearData() {
+  if(!confirm('¿Borrar todo?')) return;
+  S={key:'',players:[],battles:[],lastSync:null};
+  save(); renderConfig(); renderRanking();
+}
+
+load();
+renderRanking();
+renderConfig();
+if(S.key&&S.players.some(p=>p.tag)) setTimeout(syncAll,600);
+</script>
+</body>
+</html>
